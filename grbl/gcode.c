@@ -260,7 +260,7 @@ uint8_t gc_execute_line(char *line)
               case 5: gc_block.modal.spindle = SPINDLE_DISABLE; break;
             }
             break;
-          #ifdef ENABLE_M7
+          /*#ifdef ENABLE_M7
             case 7: case 8: case 9:
           #else
             case 8: case 9:
@@ -273,7 +273,7 @@ uint8_t gc_execute_line(char *line)
               case 8: gc_block.modal.coolant |= COOLANT_FLOOD_ENABLE; break;
               case 9: gc_block.modal.coolant = COOLANT_DISABLE; break; // M9 disables both M7 and M8.
             }
-            break;
+            break;*/
           #ifdef ENABLE_PARKING_OVERRIDE_CONTROL
             case 56:
               word_bit = MODAL_GROUP_M9;
@@ -490,11 +490,11 @@ uint8_t gc_execute_line(char *line)
   //   NOTE: Although not explicitly stated so, G43.1 should be applied to only one valid
   //   axis that is configured (in config.h). There should be an error if the configured axis
   //   is absent or if any of the other axis words are present.
-  if (axis_command == AXIS_COMMAND_TOOL_LENGTH_OFFSET ) { // Indicates called in block.
+  /*if (axis_command == AXIS_COMMAND_TOOL_LENGTH_OFFSET ) { // Indicates called in block.
     if (gc_block.modal.tool_length == TOOL_LENGTH_OFFSET_ENABLE_DYNAMIC) {
       if (axis_words ^ (1<<TOOL_LENGTH_OFFSET_AXIS)) { FAIL(STATUS_GCODE_G43_DYNAMIC_AXIS_ERROR); }
     }
-  }
+  }*/
 
   // [15. Coordinate system selection ]: *N/A. Error, if cutter radius comp is active.
   // TODO: An EEPROM read of the coordinate data may require a buffer sync when the cycle
@@ -550,7 +550,7 @@ uint8_t gc_execute_line(char *line)
             // L20: Update coordinate system axis at current position (with modifiers) with programmed value
             // WPos = MPos - WCS - G92 - TLO  ->  WCS = MPos - G92 - TLO - WPos
             gc_block.values.ijk[idx] = gc_state.position[idx]-gc_state.coord_offset[idx]-gc_block.values.xyz[idx];
-            if (idx == TOOL_LENGTH_OFFSET_AXIS) { gc_block.values.ijk[idx] -= gc_state.tool_length_offset; }
+            //if (idx == TOOL_LENGTH_OFFSET_AXIS) { gc_block.values.ijk[idx] -= gc_state.tool_length_offset; }
           } else {
             // L2: Update coordinate system axis to programmed value.
             gc_block.values.ijk[idx] = gc_block.values.xyz[idx];
@@ -568,7 +568,7 @@ uint8_t gc_execute_line(char *line)
         if (bit_istrue(axis_words,bit(idx)) ) {
           // WPos = MPos - WCS - G92 - TLO  ->  G92 = MPos - WCS - TLO - WPos
           gc_block.values.xyz[idx] = gc_state.position[idx]-block_coord_system[idx]-gc_block.values.xyz[idx];
-          if (idx == TOOL_LENGTH_OFFSET_AXIS) { gc_block.values.xyz[idx] -= gc_state.tool_length_offset; }
+          //if (idx == TOOL_LENGTH_OFFSET_AXIS) { gc_block.values.xyz[idx] -= gc_state.tool_length_offset; }
         } else {
           gc_block.values.xyz[idx] = gc_state.coord_offset[idx];
         }
@@ -593,7 +593,7 @@ uint8_t gc_execute_line(char *line)
                 // Apply coordinate offsets based on distance mode.
                 if (gc_block.modal.distance == DISTANCE_MODE_ABSOLUTE) {
                   gc_block.values.xyz[idx] += block_coord_system[idx] + gc_state.coord_offset[idx];
-                  if (idx == TOOL_LENGTH_OFFSET_AXIS) { gc_block.values.xyz[idx] += gc_state.tool_length_offset; }
+                  //if (idx == TOOL_LENGTH_OFFSET_AXIS) { gc_block.values.xyz[idx] += gc_state.tool_length_offset; }
                 } else {  // Incremental mode
                   gc_block.values.xyz[idx] += gc_state.position[idx];
                 }
@@ -949,13 +949,13 @@ uint8_t gc_execute_line(char *line)
   pl_data->condition |= gc_state.modal.spindle; // Set condition flag for planner use.
 
   // [8. Coolant control ]:
-  if (gc_state.modal.coolant != gc_block.modal.coolant) {
+  /*if (gc_state.modal.coolant != gc_block.modal.coolant) {
     // NOTE: Coolant M-codes are modal. Only one command per line is allowed. But, multiple states
     // can exist at the same time, while coolant disable clears all states.
     coolant_sync(gc_block.modal.coolant);
     gc_state.modal.coolant = gc_block.modal.coolant;
   }
-  pl_data->condition |= gc_state.modal.coolant; // Set condition flag for planner use.
+  pl_data->condition |= gc_state.modal.coolant; // Set condition flag for planner use.*/
 
   // [9. Override control ]: NOT SUPPORTED. Always enabled. Except for a Grbl-only parking control.
   #ifdef ENABLE_PARKING_OVERRIDE_CONTROL
@@ -981,7 +981,7 @@ uint8_t gc_execute_line(char *line)
   // NOTE: If G43 were supported, its operation wouldn't be any different from G43.1 in terms
   // of execution. The error-checking step would simply load the offset value into the correct
   // axis of the block XYZ value array.
-  if (axis_command == AXIS_COMMAND_TOOL_LENGTH_OFFSET ) { // Indicates a change.
+  /*if (axis_command == AXIS_COMMAND_TOOL_LENGTH_OFFSET ) { // Indicates a change.
     gc_state.modal.tool_length = gc_block.modal.tool_length;
     if (gc_state.modal.tool_length == TOOL_LENGTH_OFFSET_CANCEL) { // G49
       gc_block.values.xyz[TOOL_LENGTH_OFFSET_AXIS] = 0.0;
@@ -990,7 +990,7 @@ uint8_t gc_execute_line(char *line)
       gc_state.tool_length_offset = gc_block.values.xyz[TOOL_LENGTH_OFFSET_AXIS];
       system_flag_wco_change();
     }
-  }
+  }*/
 
   // [15. Coordinate system selection ]:
   if (gc_state.modal.coord_select != gc_block.modal.coord_select) {
@@ -1120,7 +1120,7 @@ uint8_t gc_execute_line(char *line)
         if (!(settings_read_coord_data(gc_state.modal.coord_select,gc_state.coord_system))) { FAIL(STATUS_SETTING_READ_FAIL); }
         system_flag_wco_change(); // Set to refresh immediately just in case something altered.
         spindle_set_state(SPINDLE_DISABLE,0.0);
-        coolant_set_state(COOLANT_DISABLE);
+        //coolant_set_state(COOLANT_DISABLE);
       }
       report_feedback_message(MESSAGE_PROGRAM_END);
     }

@@ -316,7 +316,7 @@ void report_gcode_modes()
     case SPINDLE_DISABLE : serial_write('5'); break;
   }
 
-  #ifdef ENABLE_M7
+  /*#ifdef ENABLE_M7
     if (gc_state.modal.coolant) { // Note: Multiple coolant states may be active at the same time.
       if (gc_state.modal.coolant & PL_COND_FLAG_COOLANT_MIST) { report_util_gcode_modes_M(); serial_write('7'); }
       if (gc_state.modal.coolant & PL_COND_FLAG_COOLANT_FLOOD) { report_util_gcode_modes_M(); serial_write('8'); }
@@ -325,7 +325,7 @@ void report_gcode_modes()
     report_util_gcode_modes_M();
     if (gc_state.modal.coolant) { serial_write('8'); }
     else { serial_write('9'); }
-  #endif
+  #endif*/
 
   #ifdef ENABLE_PARKING_OVERRIDE_CONTROL
     if (sys.override_ctrl == OVERRIDE_PARKING_MOTION) { 
@@ -379,9 +379,9 @@ void report_build_info(char *line)
   #ifdef USE_LINE_NUMBERS
     serial_write('N');
   #endif
-  #ifdef ENABLE_M7
+  /*#ifdef ENABLE_M7
     serial_write('M');
-  #endif
+  #endif*/
   #ifdef COREXY
     serial_write('C');
   #endif
@@ -512,7 +512,7 @@ void report_realtime_status()
     for (idx=0; idx< N_AXIS; idx++) {
       // Apply work coordinate offsets and tool length offset to current position.
       wco[idx] = gc_state.coord_system[idx]+gc_state.coord_offset[idx];
-      if (idx == TOOL_LENGTH_OFFSET_AXIS) { wco[idx] += gc_state.tool_length_offset; }
+      //if (idx == TOOL_LENGTH_OFFSET_AXIS) { wco[idx] += gc_state.tool_length_offset; }
       if (bit_isfalse(settings.status_report_mask,BITFLAG_RT_STATUS_POSITION_TYPE)) {
         print_position[idx] -= wco[idx];
       }
@@ -625,8 +625,8 @@ void report_realtime_status()
       print_uint8_base10(sys.spindle_speed_ovr);
 
       uint8_t sp_state = spindle_get_state();
-      uint8_t cl_state = coolant_get_state();
-      if (sp_state || cl_state) {
+      //uint8_t cl_state = coolant_get_state();
+      if (sp_state /*|| cl_state*/) {
         printPgmString(PSTR("|A:"));
         if (sp_state) { // != SPINDLE_STATE_DISABLE
           #ifdef VARIABLE_SPINDLE 
@@ -641,10 +641,10 @@ void report_realtime_status()
             else { serial_write('C'); } // CCW
           #endif
         }
-        if (cl_state & COOLANT_STATE_FLOOD) { serial_write('F'); }
+        /*if (cl_state & COOLANT_STATE_FLOOD) { serial_write('F'); }
         #ifdef ENABLE_M7
           if (cl_state & COOLANT_STATE_MIST) { serial_write('M'); }
-        #endif
+        #endif*/
       }  
     }
   #endif
